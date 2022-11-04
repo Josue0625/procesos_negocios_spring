@@ -2,10 +2,13 @@ package com.procesos.negocio.josue.services;
 
 import com.procesos.negocio.josue.models.User;
 import com.procesos.negocio.josue.repository.UserRepository;
+import com.procesos.negocio.josue.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +18,10 @@ public class UserServiceImpl implements UserService{
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JWTUtil jwtUtil;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public ResponseEntity<User> getUserById(Long id) {
@@ -28,6 +35,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public ResponseEntity<User> createUser(User user) {
         try{
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
             userRepository.save(user);
             return new ResponseEntity(user, HttpStatus.CREATED);
         }catch(Exception e){
@@ -82,6 +90,8 @@ public class UserServiceImpl implements UserService{
                 userBD.get().setDocument(user.getDocument());
                 userBD.get().setDate_Of_Birth(user.getDate_Of_Birth());
                 userBD.get().setPhone(user.getPhone());
+                userBD.get().setEmail(user.getEmail());
+                userBD.get().setPassword(passwordEncoder.encode(user.getPassword()));
                 userRepository.save(userBD.get());
             }catch (Exception e){
                 return ResponseEntity.badRequest().build();
@@ -100,4 +110,18 @@ public class UserServiceImpl implements UserService{
         }
         return ResponseEntity.notFound().build();
     }
+
+    public ResponseEntity login (String email, String password){
+        try{
+            User usuario = userRepository.findByEmail(email);
+            if(passwordEncoder.matches(password, usuario.getPassword())){
+               String  token = jwtUtil.create(String.valueOf(usuario.getId()),usuario.getEmail());
+               return  ResponseEntity.ok(token);
+            }
+        }catch (Exception e){
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
 }

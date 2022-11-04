@@ -2,6 +2,7 @@ package com.procesos.negocio.josue.controllers;
 
 import com.procesos.negocio.josue.models.User;
 import com.procesos.negocio.josue.services.UserService;
+import com.procesos.negocio.josue.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +19,14 @@ import java.util.Map;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private JWTUtil jwtUtil;
     @GetMapping(value = "/user/{id}")
-    public ResponseEntity getUsuario(@PathVariable Long id){
-       return userService.getUserById(id);
+    public ResponseEntity getUsuario(@PathVariable Long id, @RequestHeader(value = "Authorization") String token){
+       if(jwtUtil.getKey(token)==null){
+           return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("¡Token no valido!");
+       }
+        return userService.getUserById(id);
     }
     @PostMapping("/user")
     public ResponseEntity CreateUser(@Valid @RequestBody  User user){
@@ -28,27 +34,45 @@ public class UserController {
     }
 
     @GetMapping("/listusers")
-    public ResponseEntity listUsers(){
+    public ResponseEntity listUsers(@RequestHeader(value = "Authorization") String token){
+        if(jwtUtil.getKey(token)==null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("¡Token no valido!");
+        }
         return userService.allUsers();
     }
     @GetMapping("/user/name/{name}")
-    public ResponseEntity listByName(@PathVariable String name){
+    public ResponseEntity listByName(@PathVariable String name, @RequestHeader(value = "Authorization") String token){
+        if(jwtUtil.getKey(token)==null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("¡Token no valido!");
+        }
         return userService.allUsersByName(name);
     }
     @GetMapping("/user/lastname/{lastname}")
-    public ResponseEntity listByLastname(@PathVariable String lastname){
+    public ResponseEntity listByLastname(@PathVariable String lastname, @RequestHeader(value = "Authorization") String token){
+        if(jwtUtil.getKey(token)==null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("¡Token no valido!");
+        }
         return userService.allUsersByLastname(lastname);
     }
     @GetMapping("/user/{name}/{lastname}")
-    public ResponseEntity listByNameAndLastname(@PathVariable String name, @PathVariable String lastname){
-       return userService.allUsersByNameAndLastname(name, lastname);
+    public ResponseEntity listByNameAndLastname(@PathVariable String name, @PathVariable String lastname, @RequestHeader(value = "Authorization") String token){
+        if(jwtUtil.getKey(token)==null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("¡Token no valido!");
+        }
+        return userService.allUsersByNameAndLastname(name, lastname);
     }
     @PutMapping("/user/{id}")
-    public ResponseEntity editUser(@PathVariable Long id,@Valid @RequestBody  User user){
-    return userService.editUser(id, user);
+    public ResponseEntity editUser(@PathVariable Long id,@Valid @RequestBody  User user, @RequestHeader(value = "Authorization") String token){
+        if(jwtUtil.getKey(token)==null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("¡Token no valido!");
+        }
+        return userService.editUser(id, user);
     }
     @DeleteMapping("/user/{id}")
-    public ResponseEntity deleteUser(@PathVariable Long id){
+    public ResponseEntity deleteUser(@PathVariable Long id, @RequestHeader(value = "Authorization") String token){
+        if(jwtUtil.getKey(token)==null){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("¡Token no valido!");
+        }
         return userService.deleteUser(id);
     }
     @ResponseStatus(HttpStatus.BAD_REQUEST)
